@@ -221,3 +221,19 @@ describe("Task API E2E Tests", () => {
 		});
 	});
 });
+
+describe("prisma singleton (real module)", () => {
+	it("should instantiate the real Prisma client", async () => {
+		// Bypass the module mock above to execute the real prisma.ts source.
+		const actual = await vi.importActual<
+			typeof import("../../lib/prisma.js")
+		>("../../lib/prisma.js");
+		const realPrisma = actual.default;
+
+		expect(realPrisma).toBeDefined();
+		expect(typeof realPrisma.$disconnect).toBe("function");
+		expect(realPrisma.task).toBeDefined();
+
+		await realPrisma.$disconnect();
+	});
+});
