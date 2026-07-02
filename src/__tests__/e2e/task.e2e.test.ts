@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
 import { vi } from "vitest";
 import testPrisma from "./setup.js";
 
@@ -153,6 +153,71 @@ describe("Task API E2E Tests", () => {
 
 			expect(res.status).toBe(404);
 			expect(res.body).toHaveProperty("error");
+		});
+	});
+
+	describe("Server errors (500)", () => {
+		afterEach(() => {
+			vi.restoreAllMocks();
+		});
+
+		it("GET /api/tasks should return 500 on database failure", async () => {
+			vi.spyOn(testPrisma.task, "findMany").mockRejectedValueOnce(
+				new Error("DB failure")
+			);
+
+			const res = await request(app).get("/api/tasks");
+
+			expect(res.status).toBe(500);
+			expect(res.body).toEqual({ error: "Failed to fetch tasks" });
+		});
+
+		it("GET /api/tasks/:id should return 500 on database failure", async () => {
+			vi.spyOn(testPrisma.task, "findUnique").mockRejectedValueOnce(
+				new Error("DB failure")
+			);
+
+			const res = await request(app).get("/api/tasks/1");
+
+			expect(res.status).toBe(500);
+			expect(res.body).toEqual({ error: "Failed to fetch task" });
+		});
+
+		it("POST /api/tasks should return 500 on database failure", async () => {
+			vi.spyOn(testPrisma.task, "create").mockRejectedValueOnce(
+				new Error("DB failure")
+			);
+
+			const res = await request(app)
+				.post("/api/tasks")
+				.send({ title: "Boom" });
+
+			expect(res.status).toBe(500);
+			expect(res.body).toEqual({ error: "Failed to create task" });
+		});
+
+		it("PUT /api/tasks/:id should return 500 on database failure", async () => {
+			vi.spyOn(testPrisma.task, "findUnique").mockRejectedValueOnce(
+				new Error("DB failure")
+			);
+
+			const res = await request(app)
+				.put("/api/tasks/1")
+				.send({ title: "Boom" });
+
+			expect(res.status).toBe(500);
+			expect(res.body).toEqual({ error: "Failed to update task" });
+		});
+
+		it("DELETE /api/tasks/:id should return 500 on database failure", async () => {
+			vi.spyOn(testPrisma.task, "findUnique").mockRejectedValueOnce(
+				new Error("DB failure")
+			);
+
+			const res = await request(app).delete("/api/tasks/1");
+
+			expect(res.status).toBe(500);
+			expect(res.body).toEqual({ error: "Failed to delete task" });
 		});
 	});
 });
