@@ -133,3 +133,6 @@ dist
 dist/
 
 .scannerwork/
+
+# SBOM générés
+sbom-*.json
